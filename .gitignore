@@ -1,0 +1,26 @@
+# Build artifacts
+node_modules/
+dist/
+src-tauri/target/
+
+# Glacier-specific
+architecture.md
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tauri
+src-tauri/gen/schemas/*.json
+
+# Local settings
+.claude/settings.local.json

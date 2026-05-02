@@ -1,0 +1,63 @@
+@font-face {
+  font-family: "Symbols Nerd Font Mono";
+  src: url("/fonts/SymbolsNerdFontMono-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  unicode-range: U+E000-F8FF, U+F0000-FFFFF;
+}
+
+:root {
+  --gl-bg: #1a1b26;
+  --gl-fg: #c0caf5;
+  --gl-ui-bg: #16161e;
+  --gl-ui-border: #292e42;
+  --gl-ui-text: #c0caf5;
+  --gl-ui-text-muted: #565f89;
+  --gl-ui-accent: #7aa2f7;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--gl-ui-bg);
+  color: var(--gl-ui-text);
+  font-family: system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Remove default selection color for terminal area */
+.xterm-viewport::-webkit-scrollbar {
+  width: 6px;
+}
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: var(--gl-ui-border);
+  border-radius: 3px;
+}
+
+.xterm-helper-textarea {
+  /* Prevent system font from interfering with terminal */
+  font-family: inherit !important;
+}
+
+/* Allow CSS background images to show through the terminal.
+   xterm.js sets viewport background-color via JS; override it so the
+   parent pane's background-image (or var(--gl-bg)) shows through. */
+.xterm .xterm-viewport {
+  background-color: transparent !important;
+}
+
+/* When a background image is active, force all xterm layers transparent
+   so the background image layer behind the terminal remains visible. */
+.xterm-glacier-bg .xterm,
+.xterm-glacier-bg .xterm-viewport,
+.xterm-glacier-bg .xterm-screen,
+.xterm-glacier-bg canvas {
+  background-color: transparent !important;
+}
