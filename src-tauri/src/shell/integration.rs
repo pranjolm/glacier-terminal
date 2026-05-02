@@ -200,12 +200,14 @@ pub fn write_integration_scripts() -> anyhow::Result<PathBuf> {
 
     fs::create_dir_all(&base)?;
     fs::create_dir_all(base.join("zsh"))?;
+    fs::create_dir_all(base.join("bash"))?;
 
     fs::write(base.join("glacier.fish"), FISH_INTEGRATION)?;
     fs::write(base.join("glacier.bash"), BASH_INTEGRATION)?;
 
-    // Zsh: .zshrc that sources the real one then appends integration
     let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("~"));
+
+    // Zsh: .zshrc that sources the real one then appends integration
     let zshrc_content = format!(
         r#"# Glacier Zsh integration wrapper
 # Source user's real zshrc first
@@ -219,6 +221,20 @@ autoload -U add-zsh-hook
         integration = ZSH_INTEGRATION,
     );
     fs::write(base.join("zsh").join(".zshrc"), zshrc_content)?;
+
+    // Bash: .bashrc that sources the real one then appends integration
+    let bashrc_content = format!(
+        r#"# Glacier Bash integration wrapper
+# Source user's real .bashrc first
+if [[ -f "{home}/.bashrc" ]]; then
+  source "{home}/.bashrc"
+fi
+{integration}
+"#,
+        home = home.display(),
+        integration = BASH_INTEGRATION,
+    );
+    fs::write(base.join("bash").join(".bashrc"), bashrc_content)?;
 
     Ok(base)
 }
@@ -251,13 +267,15 @@ pub fn build_shell_command(
     match shell_kind {
         ShellKind::Fish => {
             let script = base.join("glacier.fish");
-            cmd.args(["--init-command", &format!("source {}", script.display())]);
+            cmd.args(["--login", "--init-command", &format!("source {}", script.display())]);
         }
         ShellKind::Zsh => {
             cmd.env("ZDOTDIR", base.join("zsh").to_string_lossy().as_ref());
+            cmd.args(["-l"]);
         }
         ShellKind::Bash => {
-            cmd.env("BASH_ENV", base.join("glacier.bash").to_string_lossy().as_ref());
+            let bashrc = base.join("bash").join(".bashrc");
+            cmd.args(["-l", "-i", "--rcfile", &bashrc.to_string_lossy()]);
         }
         ShellKind::Unknown(_) => {}
     }
