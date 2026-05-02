@@ -86,18 +86,35 @@ export default function TerminalPane({
           return true;
         }
 
+        if (e.key === 'Escape') {
+          clearSuggestion();
+          return true;
+        }
+
         const sug = suggestionRef.current;
-        if (sug && (e.key === 'Tab' || e.key === 'ArrowRight')) {
-          // Only accept if at end of line (simple heuristic: cursorX >= length of current line)
+        if (sug && e.key === 'Tab') {
+          // Tab always accepts the full suggestion
+          writeRef.current?.(sug);
+          clearSuggestion();
+          return false;
+        }
+        if (sug && e.key === 'ArrowRight') {
+          // Right arrow only accepts if cursor is at end of line
           const buffer = term.buffer.active;
           const line = buffer.getLine(buffer.baseY + buffer.cursorY);
           const lineText = line?.translateToString(true) || '';
-          
-          if (buffer.cursorX >= lineText.length) {
+
+          if (buffer.cursorX >= lineText.trimEnd().length) {
             writeRef.current?.(sug);
             clearSuggestion();
             return false;
           }
+        }
+
+        // Clear suggestion on cursor movement away from end of line
+        if (sug && (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Home' || e.key === 'End')) {
+          clearSuggestion();
+          return true;
         }
 
         return true;

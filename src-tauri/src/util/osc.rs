@@ -118,7 +118,13 @@ fn parse_osc(content: &[u8]) -> Option<OscEvent> {
             };
             Some(OscEvent::PromptMark(mark))
         }
-        684 => Some(OscEvent::Suggestion(rest.to_string())),
-        _ => None,
+        684 => {
+            log::debug!("OSC 684 suggestion parsed: '{}'", rest);
+            Some(OscEvent::Suggestion(rest.to_string()))
+        }
+        other => {
+            log::trace!("OSC {} ignored", other);
+            None
+        }
     }
 }

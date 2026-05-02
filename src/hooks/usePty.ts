@@ -50,7 +50,10 @@ export function usePty({ sessionId, terminal, onSuggestion, onExit }: UsePtyOpti
       // Inline autocomplete suggestion
       unlisten.push(await listen<PtySuggestionPayload>(
         `pty://suggestion/${sessionId}`,
-        ({ payload }) => onSuggestion?.(payload.suggestion),
+        ({ payload }) => {
+          // suggestion received
+          onSuggestion?.(payload.suggestion);
+        },
       ));
 
       // Exit

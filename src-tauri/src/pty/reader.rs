@@ -34,6 +34,7 @@ pub fn spawn_reader(
                         }
 
                         for event in events {
+                            log::debug!("PTY OSC event for {}: {:?}", sid, event);
                             emit_osc_event(&app_clone, &sid, event);
                         }
                     }

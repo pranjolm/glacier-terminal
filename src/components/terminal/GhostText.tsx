@@ -16,24 +16,30 @@ export default function GhostText({ terminal, suggestion }: Props) {
       if (!ref.current || !suggestion) return;
 
       const core = (terminal as any)._core;
-      const dims = core?._renderService?.dimensions;
+      const dims = core?._renderService?.dimensions ?? core?._viewport?._renderer?.dimensions;
       if (!dims) return;
 
-      const { actualCellWidth, actualCellHeight } = dims;
-      const { x, y } = core.buffer; // absolute coordinates
-      const scrollOffset = terminal.buffer.active.viewportY;
+      // xterm 5.x: dimensions.css.cell.width / .height
+      const cellWidth = dims?.css?.cell?.width ?? 0;
+      const cellHeight = dims?.css?.cell?.height ?? 0;
 
-      const left = x * actualCellWidth;
-      const top = (y - scrollOffset) * actualCellHeight;
+      // Use public API for cursor position
+      const activeBuffer = terminal.buffer.active;
+      const x = activeBuffer.cursorX;
+      const y = activeBuffer.cursorY;
+      const scrollOffset = activeBuffer.viewportY;
 
-      if (Number.isFinite(left) && Number.isFinite(top)) {
+      const left = x * cellWidth;
+      const top = (y - scrollOffset) * cellHeight;
+
+      if (Number.isFinite(left) && Number.isFinite(top) && cellWidth > 0 && cellHeight > 0) {
         Object.assign(ref.current.style, {
           left: `${left}px`,
           top: `${top}px`,
-          height: `${actualCellHeight}px`,
+          height: `${cellHeight}px`,
           fontSize: `${terminal.options.fontSize ?? 14}px`,
           fontFamily: terminal.options.fontFamily || 'monospace',
-          lineHeight: `${actualCellHeight}px`,
+          lineHeight: `${cellHeight}px`,
         });
       }
     };
