@@ -21,6 +21,10 @@
   <b>First release coming soon.</b> Suggestions and feedback are welcome.
 </p>
 
+<p align="center">
+  <img src="screenshot.png" alt="Glacier terminal with file icons and split panes" width="900" />
+</p>
+
 ---
 
 ## Why Glacier?
