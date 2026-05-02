@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <b>First release coming soon.</b> Suggestions and feedback are welcome.
+  <b>First release available.</b> Download the DMG below.
 </p>
 
 <p align="center">
@@ -26,6 +26,14 @@
 </p>
 
 ---
+
+## Install
+
+1. Go to [Releases](https://github.com/pranjolm/glacier-terminal/releases) and download the latest `.dmg`
+2. Double-click the DMG, drag **Glacier** to Applications
+3. Done. No Rust, no Node.js, no Homebrew — the app is fully self-contained.
+
+**Requirements:** macOS 13+ (Apple Silicon)
 
 ## Why Glacier?
 
@@ -39,6 +47,23 @@ Most terminal emulators haven't changed much in twenty years. Glacier rethinks t
 - **True native feel** — copy, paste, and drag behave exactly like every other Mac app. `⌘ C` copies selection, `⌘ V` pastes with bracketed paste support.
 - **Built-in help** — press `F1` or click the `?` button to see all keyboard shortcuts. No browser tabs, no external links.
 - **Inline autocomplete** (work in progress) — ghost text suggestions from your shell history and completions. Currently being fixed.
+
+## Keyboard Shortcuts
+
+All shortcuts work out of the box — no configuration needed. Press `F1` inside Glacier to see this list anytime.
+
+| Shortcut | Action |
+|---|---|
+| `⌘ D` | Split pane (auto-tile direction) |
+| `⌘ W` | Close active pane |
+| `⌘ T` | New tab |
+| `⌘ ,` | Settings |
+| `⌘ C` | Copy selection |
+| `⌘ V` | Paste |
+| `⌘ Click` | Open path in Finder / open URL in browser |
+| `Tab` / `→` | Accept autocomplete suggestion |
+| `Esc` | Close panel or modal |
+| `F1` | Show keyboard shortcuts help |
 
 ## Tech Stack
 
@@ -62,7 +87,7 @@ Most terminal emulators haven't changed much in twenty years. Glacier rethinks t
 
 ## Development
 
-You need a Mac with **Rust** and **Node.js 20+** installed. This is only for building from source — end users just download the DMG.
+You need a Mac with **Rust** and **Node.js 20+** installed.
 
 ```bash
 # Install dependencies
@@ -74,63 +99,6 @@ npm run tauri dev
 # Build a release DMG
 npm run tauri build
 ```
-
-## Keyboard Shortcuts
-
-All shortcuts work out of the box — no configuration needed. Press `F1` inside Glacier to see this list anytime.
-
-| Shortcut | Action |
-|---|---|
-| `⌘ D` | Split pane (auto-tile direction) |
-| `⌘ W` | Close active pane |
-| `⌘ T` | New tab |
-| `⌘ ,` | Settings |
-| `⌘ C` | Copy selection |
-| `⌘ V` | Paste |
-| `⌘ Click` | Open path in Finder / open URL in browser |
-| `Tab` / `→` | Accept autocomplete suggestion |
-| `Esc` | Close panel or modal |
-| `F1` | Show keyboard shortcuts help |
-
-## Releasing
-
-Glacier releases through **GitHub Releases** as the primary distribution channel.
-
-### 1. Build the release DMG
-
-```bash
-npm run tauri build
-```
-
-This produces:
-- `src-tauri/target/release/bundle/dmg/Glacier_*.dmg` — ready to distribute
-- `src-tauri/target/release/bundle/macos/Glacier.app` — for local testing
-
-### 2. Upload to GitHub Releases
-
-1. Go to your repo's **Releases** page on GitHub
-2. Click **Draft a new release**
-3. Tag it (e.g., `v0.1.0`)
-4. Attach the `.dmg` file
-5. Publish
-
-### 3. Users install it
-
-Double-click the DMG, drag Glacier to Applications. That's it. **No Rust, no Node.js, no Homebrew, no package managers.** The app is fully self-contained.
-
-### 4. Future: Homebrew Cask (optional)
-
-Once you have a few releases, you can submit a Homebrew Cask so users can install with:
-
-```bash
-brew install --cask glacier-terminal
-```
-
-This is just a small Ruby formula that downloads the latest DMG from GitHub Releases. Not required for v0.1.
-
-### Skip the Mac App Store
-
-Don't bother — the sandboxing would break PTY access, shell spawning, and Finder integration. Terminal apps and the Mac App Store don't mix.
 
 ## Roadmap
 
@@ -147,9 +115,19 @@ Don't bother — the sandboxing would break PTY access, shell spawning, and Find
 - [ ] Plugin system for custom OSC handlers
 - [ ] Windows / Linux port
 
+## For Maintainers: Releasing
+
+1. Build: `npm run tauri build`
+2. Draft a release on GitHub, tag it (e.g. `v0.1.0`)
+3. Attach the `.dmg` from `src-tauri/target/release/bundle/dmg/`
+
+**Note:** The Mac App Store is not an option — sandboxing breaks PTY access, shell spawning, and Finder integration. Terminal apps and the App Store don't mix.
+
+**Future:** Submit a Homebrew Cask once you have a few releases so users can `brew install --cask glacier-terminal`.
+
 ## Feedback & Contributing
 
-Glacier is early. If you have ideas, find bugs, or just want to rant about terminals, open an issue or start a discussion. Every piece of feedback shapes what the first release looks like.
+Glacier is early. If you have ideas, find bugs, or just want to rant about terminals, open an issue or start a discussion. Every piece of feedback shapes what the next release looks like.
 
 Pull requests are welcome for small, focused improvements. For larger changes, please open an issue first so we can align on direction.
 
