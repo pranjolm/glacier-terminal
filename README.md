@@ -35,6 +35,15 @@
 
 **Requirements:** macOS 13+ (Apple Silicon)
 
+**⚠️ "Glacier is damaged" warning:**
+Because the app is not yet code-signed, macOS may show a "damaged" dialog on first launch after downloading from GitHub. This is just Gatekeeper being cautious. To fix it, run this in Terminal:
+
+```bash
+xattr -cr /Applications/Glacier.app
+```
+
+Then open Glacier normally. (A proper Apple Developer code signature will be added in a future release.)
+
 ## Why Glacier?
 
 Most terminal emulators haven't changed much in twenty years. Glacier rethinks the terminal as a first-class macOS app — fast, native, and actually pleasant to use.
