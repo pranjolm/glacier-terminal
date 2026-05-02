@@ -118,7 +118,7 @@ npm run tauri build
 - [x] Copy / paste with bracketed paste support
 - [x] Live theme, font, and background settings
 - [x] Built-in help panel with shortcuts
-- [ ] Inline autocomplete fix
+- [x] Inline autocomplete fix
 - [ ] Search / find in terminal
 - [ ] Custom keybindings
 - [ ] Plugin system for custom OSC handlers
