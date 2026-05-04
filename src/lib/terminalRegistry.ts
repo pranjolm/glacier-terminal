@@ -29,17 +29,54 @@ export function getEntry(sessionId: string): TerminalEntry | undefined {
   return registry.get(sessionId);
 }
 
+// Obvious non-filenames that sometimes look like files (e.g. all-caps or CamelCase).
+// Kept tiny — only words that commonly appear in terminal output.
+const NOT_A_FILE = new Set([
+  'error', 'warning', 'info', 'debug', 'fatal', 'trace',
+  'true', 'false', 'null', 'undefined', 'nil', 'none',
+  'yes', 'no', 'ok', 'done', 'success', 'failed', 'aborted',
+  'running', 'started', 'stopped', 'waiting', 'listening',
+  'localhost',
+]);
+
 function isPathLike(word: string): boolean {
-  if (word.length < 2) return false;
-  return (
-    word.startsWith('/') ||
-    word.startsWith('~/') ||
-    word.startsWith('./') ||
-    word.startsWith('../') ||
-    (word.includes('/') && word.length > 3) ||
-    /\.[a-z0-9]{1,6}$/i.test(word) ||
-    /^[\w\-\.]+$/.test(word)
-  );
+  if (word.length < 2 || word.length > 200) return false;
+
+  const lower = word.toLowerCase();
+  if (NOT_A_FILE.has(lower)) return false;
+
+  // 1. Paths with separators
+  if (word.startsWith('/')) return true;
+  if (word.startsWith('~/') || word === '~') return true;
+  if (word.startsWith('./') || word.startsWith('../')) return true;
+  if (word.includes('/') && word.length > 2) return true;
+
+  // 2. Dotfiles (.gitignore, .env, .bashrc)
+  if (word.startsWith('.') && word.length > 1) return true;
+
+  // 3. Files with extensions (main.tsx, package.json, README.md)
+  if (/^.+\.[a-z][a-z0-9]{1,9}$/.test(word)) {
+    // Reject domain-like words: com/org/net/io etc. without _ or -
+    if (/\.(com|org|net|io|co|app|dev|ai)$/.test(lower) && lower.length > 8 && !lower.includes('_') && !lower.includes('-')) {
+      return false;
+    }
+    return true;
+  }
+
+  // 4. Structural hints that scream "filename/project name":
+  //    snake_case, kebab-case, CamelCase, ALL_CAPS, or anything with a number.
+  //    Pure lowercase English words ("the", "and", "hello") pass through and return false.
+  const hasUnderscore = word.includes('_');
+  const hasDash = word.includes('-');
+  const hasNumber = /\d/.test(word);
+  const isCamelCase = /[a-z][A-Z]/.test(word) || /[A-Z][a-z]/.test(word);
+  const isAllCaps = word === word.toUpperCase() && /[A-Z]/.test(word);
+
+  if (hasUnderscore || hasDash || hasNumber || isCamelCase || isAllCaps) {
+    return /^[a-zA-Z0-9._-]+$/.test(word);
+  }
+
+  return false;
 }
 
 function resolvePath(word: string, sessionId: string): string {

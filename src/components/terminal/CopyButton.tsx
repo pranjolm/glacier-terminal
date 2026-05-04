@@ -43,7 +43,9 @@ export default function CopyButton({ terminal }: Props) {
     return () => disposable.dispose();
   }, [terminal]);
 
-  const handleCopy = async () => {
+  const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
     if (!terminal) return;
     await navigator.clipboard.writeText(terminal.getSelection());
     setCopied(true);

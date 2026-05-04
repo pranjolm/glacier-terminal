@@ -75,10 +75,6 @@ export default function TerminalPane({
           navigator.clipboard.writeText(term.getSelection());
           return false;
         }
-        if (e.metaKey && e.key === 'v') {
-          navigator.clipboard.readText().then((text) => writeRef.current?.(text));
-          return false;
-        }
         if (e.metaKey && e.key === 'd') return false;
 
         if (e.key === 'Enter') {
