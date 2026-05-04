@@ -9,6 +9,11 @@ pub fn get_home_dir() -> String {
 }
 
 #[tauri::command]
+pub fn check_path_exists(path: String) -> bool {
+    std::fs::metadata(&path).is_ok()
+}
+
+#[tauri::command]
 pub async fn read_image_file(path: String) -> Result<String, String> {
     println!("Reading image file: {}", path);
     let bytes = tokio::fs::read(&path).await.map_err(|e| e.to_string())?;

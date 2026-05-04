@@ -272,7 +272,35 @@ function __glacier_suggest
         return
     end
 
-    # Priority 1: History match
+    # Detect file/directory commands — for these, prioritize completions over history
+    set -l file_cmds cd ls ll la cat touch mkdir rmdir rm cp mv open code vim vi nano less more head tail grep find chmod chown diff scp rsync tar zip unzip docker kubectl
+    set -l cmd_first_word (string split " " -- "$cmd")[1]
+    set -l is_file_cmd false
+    if contains "$cmd_first_word" $file_cmds
+        set is_file_cmd true
+    end
+
+    # For file commands: Priority 1 = Completion match (paths/directories)
+    if test "$is_file_cmd" = true
+        set -l comp (complete -C"$cmd" | head -n1 | cut -f1)
+        if test -n "$comp"
+            set -l tokens (string split " " -- "$cmd")
+            set -l last_token $tokens[-1]
+            if test -n "$last_token" -a (string match -qi "$last_token*" "$comp")
+                set -l token_lower (string lower "$last_token")
+                set -l comp_lower (string lower "$comp")
+                if string match -q "$token_lower*" "$comp_lower"
+                    set -l sug (string sub -s (math (string length "$last_token") + 1) "$comp")
+                    if test -n "$sug"
+                        printf '\033]684;%s\033\\' "$sug"
+                        return
+                    end
+                end
+            end
+        end
+    end
+
+    # Priority 1 (non-file) / Priority 2 (file): History match
     set -l hist (history --prefix "$cmd" | head -n1)
     # Seed fallback — common commands shipped with Glacier
     if test -z "$hist"; and test -n "$GLACIER_SEED_FILE"; and test -f "$GLACIER_SEED_FILE"
@@ -290,19 +318,21 @@ function __glacier_suggest
         end
     end
 
-    # Priority 2: Completion match (e.g. paths)
-    set -l comp (complete -C"$cmd" | head -n1 | cut -f1)
-    if test -n "$comp"
-        set -l tokens (string split " " -- "$cmd")
-        set -l last_token $tokens[-1]
-        if test -n "$last_token" -a (string match -qi "$last_token*" "$comp")
-            set -l token_lower (string lower "$last_token")
-            set -l comp_lower (string lower "$comp")
-            if string match -q "$token_lower*" "$comp_lower"
-                set -l sug (string sub -s (math (string length "$last_token") + 1) "$comp")
-                if test -n "$sug"
-                    printf '\033]684;%s\033\\' "$sug"
-                    return
+    # Priority 2 (non-file) / Fallback (file): Completion match
+    if test "$is_file_cmd" != true
+        set -l comp (complete -C"$cmd" | head -n1 | cut -f1)
+        if test -n "$comp"
+            set -l tokens (string split " " -- "$cmd")
+            set -l last_token $tokens[-1]
+            if test -n "$last_token" -a (string match -qi "$last_token*" "$comp")
+                set -l token_lower (string lower "$last_token")
+                set -l comp_lower (string lower "$comp")
+                if string match -q "$token_lower*" "$comp_lower"
+                    set -l sug (string sub -s (math (string length "$last_token") + 1) "$comp")
+                    if test -n "$sug"
+                        printf '\033]684;%s\033\\' "$sug"
+                        return
+                    end
                 end
             end
         end
@@ -394,9 +424,39 @@ __glacier_emit_suggestion() {
         printf '\033]684;\033\\'
         return
     fi
-    # History prefix match
+
+    # Detect file/directory commands — for these, prioritize completions over history
+    local file_cmds=(cd ls ll la cat touch mkdir rmdir rm cp mv open code vim vi nano less more head tail grep find chmod chown diff scp rsync tar zip unzip docker kubectl)
+    local cmd_first_word="${cmd%% *}"
+    local is_file_cmd=false
+    if [[ " ${file_cmds[*]} " == *" $cmd_first_word "* ]]; then
+        is_file_cmd=true
+    fi
+
+    # For file commands: Priority 1 = File/directory completion via glob
+    if [[ "$is_file_cmd" == true ]]; then
+        local last_word="${cmd##* }"
+        if [[ -n "$last_word" ]]; then
+            local -a files
+            local glob_prefix="${last_word//\*/\\*}"
+            glob_prefix="${glob_prefix//\?/\\?}"
+            glob_prefix="${glob_prefix//\[/\\[}"
+            files=(${glob_prefix}*(N))
+            if (( ${#files} > 0 )); then
+                local comp="${files[1]}"
+                if [[ "${(L)comp}" == "${(L)last_word}"* ]]; then
+                    local sug="${comp:${#last_word}}"
+                    if [[ -n "$sug" ]]; then
+                        printf '\033]684;%s\033\\' "$sug"
+                        return
+                    fi
+                fi
+            fi
+        fi
+    fi
+
+    # Priority 1 (non-file) / Priority 2 (file): History match
     local hist=$(fc -l -n -r 1 2>/dev/null | grep -F -i "$cmd" | head -n1)
-    # Seed fallback — common commands shipped with Glacier
     if [[ -z "$hist" && -n "${GLACIER_SEED_FILE:-}" && -f "$GLACIER_SEED_FILE" ]]; then
         hist=$(grep -F -i "$cmd" "$GLACIER_SEED_FILE" | head -n1)
     fi
@@ -409,20 +469,23 @@ __glacier_emit_suggestion() {
             fi
         fi
     fi
-    # Completion match (commands and files) — zsh native
-    local -a matches
-    matches=(${(M)${(k)commands}:#(#i)${cmd}*})
-    if (( ${#matches} == 0 )); then
-        matches=(${(M)${(k)builtins}:#(#i)${cmd}*})
-    fi
-    if (( ${#matches} > 0 )); then
-        local comp="${matches[1]}"
-        local last_word="${cmd##* }"
-        if [[ -n "$last_word" && "${(L)comp}" == "${(L)last_word}"* ]]; then
-            local sug="${comp:${#last_word}}"
-            if [[ -n "$sug" ]]; then
-                printf '\033]684;%s\033\\' "$sug"
-                return
+
+    # Priority 2 (non-file) / Fallback (file): Completion match (commands and files)
+    if [[ "$is_file_cmd" != true ]]; then
+        local -a matches
+        matches=(${(M)${(k)commands}:#(#i)${cmd}*})
+        if (( ${#matches} == 0 )); then
+            matches=(${(M)${(k)builtins}:#(#i)${cmd}*})
+        fi
+        if (( ${#matches} > 0 )); then
+            local comp="${matches[1]}"
+            local last_word="${cmd##* }"
+            if [[ -n "$last_word" && "${(L)comp}" == "${(L)last_word}"* ]]; then
+                local sug="${comp:${#last_word}}"
+                if [[ -n "$sug" ]]; then
+                    printf '\033]684;%s\033\\' "$sug"
+                    return
+                fi
             fi
         fi
     fi
@@ -536,7 +599,29 @@ __glacier_suggest_bash() {
         printf '\033]684;\033\\'
         return
     fi
-    # History prefix match
+
+    # Detect file/directory commands — for these, prioritize completions over history
+    local file_cmds="cd ls ll la cat touch mkdir rmdir rm cp mv open code vim vi nano less more head tail grep find chmod chown diff scp rsync tar zip unzip docker kubectl"
+    local cmd_first_word="${cmd%% *}"
+    local is_file_cmd=false
+    if [[ " $file_cmds " == *" $cmd_first_word "* ]]; then
+        is_file_cmd=true
+    fi
+
+    # For file commands: Priority 1 = Completion match (files/directories)
+    if [[ "$is_file_cmd" == true ]]; then
+        local last_word="${cmd##* }"
+        local comp=$(compgen -o bashdefault -o default -o filenames -o nospace -A file -- "$last_word" 2>/dev/null | head -n1)
+        if [[ -n "$comp" && "${comp,,}" == "${last_word,,}"* ]]; then
+            local sug="${comp:${#last_word}}"
+            if [[ -n "$sug" ]]; then
+                printf '\033]684;%s\033\\' "$sug"
+                return
+            fi
+        fi
+    fi
+
+    # Priority 1 (non-file) / Priority 2 (file): History match
     local hist=$(grep -F -i "$cmd" "$HISTFILE" 2>/dev/null | tail -n1)
     # Seed fallback — common commands shipped with Glacier
     if [[ -z "$hist" && -n "${GLACIER_SEED_FILE:-}" && -f "$GLACIER_SEED_FILE" ]]; then
@@ -551,18 +636,21 @@ __glacier_suggest_bash() {
             fi
         fi
     fi
-    # Completion match (commands first, then files)
-    local comp=$(compgen -c -- "$cmd" 2>/dev/null | head -n1)
-    if [[ -z "$comp" ]]; then
-        comp=$(compgen -o bashdefault -o default -o filenames -o nospace -A file -- "$cmd" 2>/dev/null | head -n1)
-    fi
-    if [[ -n "$comp" ]]; then
-        local last_word="${cmd##* }"
-        if [[ -n "$last_word" && "${comp,,}" == "${last_word,,}"* ]]; then
-            local sug="${comp:${#last_word}}"
-            if [[ -n "$sug" ]]; then
-                printf '\033]684;%s\033\\' "$sug"
-                return
+
+    # Priority 2 (non-file) / Fallback (file): Completion match
+    if [[ "$is_file_cmd" != true ]]; then
+        local comp=$(compgen -c -- "$cmd" 2>/dev/null | head -n1)
+        if [[ -z "$comp" ]]; then
+            comp=$(compgen -o bashdefault -o default -o filenames -o nospace -A file -- "$cmd" 2>/dev/null | head -n1)
+        fi
+        if [[ -n "$comp" ]]; then
+            local last_word="${cmd##* }"
+            if [[ -n "$last_word" && "${comp,,}" == "${last_word,,}"* ]]; then
+                local sug="${comp:${#last_word}}"
+                if [[ -n "$sug" ]]; then
+                    printf '\033]684;%s\033\\' "$sug"
+                    return
+                fi
             fi
         fi
     fi

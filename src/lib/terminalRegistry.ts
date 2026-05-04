@@ -10,6 +10,7 @@ import { CanvasAddon } from '@xterm/addon-canvas';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { openUrl, revealItemInDir } from '@tauri-apps/plugin-opener';
+import { invoke } from '@tauri-apps/api/core';
 import { AppSettings } from '../types/settings';
 import { THEMES, getXtermTheme } from './themes';
 import { useTerminalStore } from '../store/terminalStore';
@@ -29,52 +30,31 @@ export function getEntry(sessionId: string): TerminalEntry | undefined {
   return registry.get(sessionId);
 }
 
-// Obvious non-filenames that sometimes look like files (e.g. all-caps or CamelCase).
-// Kept tiny — only words that commonly appear in terminal output.
-const NOT_A_FILE = new Set([
-  'error', 'warning', 'info', 'debug', 'fatal', 'trace',
-  'true', 'false', 'null', 'undefined', 'nil', 'none',
-  'yes', 'no', 'ok', 'done', 'success', 'failed', 'aborted',
-  'running', 'started', 'stopped', 'waiting', 'listening',
-  'localhost',
-]);
-
+/** Fast pre-filter: only words that could realistically be a path or filename.
+ *  Does NOT guarantee the file exists — that's verified by `stat()` on click.
+ *  Pure lowercase words like "hello", "error" are rejected here. */
 function isPathLike(word: string): boolean {
   if (word.length < 2 || word.length > 200) return false;
 
-  const lower = word.toLowerCase();
-  if (NOT_A_FILE.has(lower)) return false;
+  // Absolute / relative / home paths
+  if (word.startsWith('/') || word.startsWith('~/') || word.startsWith('./') || word.startsWith('../')) return true;
+  if (word === '~') return true;
 
-  // 1. Paths with separators
-  if (word.startsWith('/')) return true;
-  if (word.startsWith('~/') || word === '~') return true;
-  if (word.startsWith('./') || word.startsWith('../')) return true;
-  if (word.includes('/') && word.length > 2) return true;
+  // Anything with a directory separator
+  if (word.includes('/')) return true;
 
-  // 2. Dotfiles (.gitignore, .env, .bashrc)
+  // Dotfiles (.gitignore, .env)
   if (word.startsWith('.') && word.length > 1) return true;
 
-  // 3. Files with extensions (main.tsx, package.json, README.md)
-  if (/^.+\.[a-z][a-z0-9]{1,9}$/.test(word)) {
-    // Reject domain-like words: com/org/net/io etc. without _ or -
-    if (/\.(com|org|net|io|co|app|dev|ai)$/.test(lower) && lower.length > 8 && !lower.includes('_') && !lower.includes('-')) {
-      return false;
-    }
-    return true;
-  }
+  // Files with extensions (main.tsx, package.json)
+  if (/^.+\.[a-zA-Z][a-zA-Z0-9]{1,9}$/.test(word)) return true;
 
-  // 4. Structural hints that scream "filename/project name":
-  //    snake_case, kebab-case, CamelCase, ALL_CAPS, or anything with a number.
-  //    Pure lowercase English words ("the", "and", "hello") pass through and return false.
-  const hasUnderscore = word.includes('_');
-  const hasDash = word.includes('-');
-  const hasNumber = /\d/.test(word);
-  const isCamelCase = /[a-z][A-Z]/.test(word) || /[A-Z][a-z]/.test(word);
-  const isAllCaps = word === word.toUpperCase() && /[A-Z]/.test(word);
-
-  if (hasUnderscore || hasDash || hasNumber || isCamelCase || isAllCaps) {
-    return /^[a-zA-Z0-9._-]+$/.test(word);
-  }
+  // Structural hints: contains _ - number, or CamelCase, or ALL_CAPS
+  // Rejects plain lowercase words like "hello", "error"
+  if (/[a-z][A-Z]/.test(word) || /[A-Z][a-z]/.test(word)) return /^[a-zA-Z0-9._-]+$/.test(word);
+  if (word === word.toUpperCase() && /[A-Z]/.test(word)) return /^[a-zA-Z0-9._-]+$/.test(word);
+  if (/\d/.test(word)) return /^[a-zA-Z0-9._-]+$/.test(word);
+  if (word.includes('_') || word.includes('-')) return /^[a-zA-Z0-9._-]+$/.test(word);
 
   return false;
 }
@@ -143,6 +123,7 @@ class PathLinkProvider implements ILinkProvider {
     const cleanWord = word.replace(/^[^\s\w\d\x00-\x7F]+/u, '').trim();
     
     if (isPathLike(cleanWord)) {
+      const resolvedPath = resolvePath(cleanWord, this._sessionId);
       links.push({
         range: {
           start: { x: start + 1, y },
@@ -150,8 +131,14 @@ class PathLinkProvider implements ILinkProvider {
         },
         text: cleanWord,
         activate: () => {
-          const path = resolvePath(cleanWord, this._sessionId);
-          revealItemInDir(path).catch(console.error);
+          // Validate the path actually exists before opening
+          invoke('check_path_exists', { path: resolvedPath })
+            .then((exists) => {
+              if (exists) {
+                revealItemInDir(resolvedPath).catch(console.error);
+              }
+            })
+            .catch(console.error);
         }
       });
     }

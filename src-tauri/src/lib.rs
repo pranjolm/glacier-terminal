@@ -6,7 +6,7 @@ mod shell;
 mod util;
 
 use commands::{
-    fs_commands::{get_home_dir, read_image_file},
+    fs_commands::{check_path_exists, get_home_dir, read_image_file},
     pty_commands::{create_session, kill_session, resize_pty, write_to_pty},
     settings_commands::{get_settings, set_settings},
 };
@@ -35,6 +35,7 @@ pub fn run() {
             get_settings,
             set_settings,
             read_image_file,
+            check_path_exists,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Glacier");
