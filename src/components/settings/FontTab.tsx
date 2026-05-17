@@ -55,24 +55,38 @@ export default function FontTab() {
 
       <Field label="Cursor Style">
         <div style={{ display: 'flex', gap: 8 }}>
-          {(['block', 'bar', 'underline'] as const).map((s) => (
+          {(['block', 'bar', 'underline'] as const).map((s) => {
+            const isActive = settings.cursorStyle === s;
+            return (
             <button
               key={s}
               onClick={() => update({ cursorStyle: s })}
               style={{
-                padding: '4px 12px',
+                padding: '4px 12px 4px 8px',
                 borderRadius: 4,
-                border: `1px solid ${settings.cursorStyle === s ? 'var(--gl-ui-accent)' : 'var(--gl-ui-border)'}`,
-                background: settings.cursorStyle === s ? 'var(--gl-ui-accent)22' : 'transparent',
-                color: 'var(--gl-ui-text)',
+                border: `1px solid ${isActive ? 'var(--gl-ui-accent)' : 'var(--gl-ui-border)'}`,
+                borderLeft: `3px solid ${isActive ? 'var(--gl-ui-accent)' : 'transparent'}`,
+                background: isActive ? 'var(--gl-ui-accent)44' : 'transparent',
+                color: isActive ? 'var(--gl-ui-text)' : 'var(--gl-ui-text-muted)',
                 cursor: 'pointer',
                 fontSize: 12,
+                fontWeight: isActive ? 600 : 400,
                 textTransform: 'capitalize',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
               }}
             >
+              <span style={{
+                color: 'var(--gl-ui-accent)',
+                fontWeight: 700,
+                fontSize: 13,
+                visibility: isActive ? 'visible' : 'hidden',
+              }}>▸</span>
               {s}
             </button>
-          ))}
+            );
+          })}
         </div>
       </Field>
 

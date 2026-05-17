@@ -33,7 +33,9 @@ export default function TabBar({ onSettingsOpen, onHelpOpen }: Props) {
       <div
         style={{ display: 'flex', gap: 4, flex: 1, WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
-        {tabs.map((tab) => (
+        {tabs.map((tab) => {
+            const isActive = tab.id === activeTabId;
+            return (
           <div
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -41,17 +43,25 @@ export default function TabBar({ onSettingsOpen, onHelpOpen }: Props) {
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '0 10px',
+              padding: '0 10px 0 6px',
               height: 26,
               borderRadius: 4,
               cursor: 'pointer',
-              background: tab.id === activeTabId ? 'var(--gl-ui-accent)22' : 'transparent',
-              border: `1px solid ${tab.id === activeTabId ? 'var(--gl-ui-accent)' : 'transparent'}`,
-              color: tab.id === activeTabId ? 'var(--gl-ui-text)' : 'var(--gl-ui-text-muted)',
+              background: isActive ? 'var(--gl-ui-accent)44' : 'transparent',
+              border: `1px solid ${isActive ? 'var(--gl-ui-accent)' : 'transparent'}`,
+              borderLeft: `3px solid ${isActive ? 'var(--gl-ui-accent)' : 'transparent'}`,
+              color: isActive ? 'var(--gl-ui-text)' : 'var(--gl-ui-text-muted)',
               fontSize: 12,
+              fontWeight: isActive ? 600 : 400,
               userSelect: 'none',
             }}
           >
+            <span style={{
+              color: 'var(--gl-ui-accent)',
+              fontWeight: 700,
+              fontSize: 13,
+              visibility: isActive ? 'visible' : 'hidden',
+            }}>▸</span>
             <span>{tab.title}</span>
             {tabs.length > 1 && (
               <button
@@ -71,7 +81,8 @@ export default function TabBar({ onSettingsOpen, onHelpOpen }: Props) {
               </button>
             )}
           </div>
-        ))}
+          );
+        })}
         <button
           onClick={handleNewTab}
           title="New tab (⌘T)"

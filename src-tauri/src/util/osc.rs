@@ -103,7 +103,12 @@ fn parse_osc(content: &[u8]) -> Option<OscEvent> {
     let code: u32 = code_str.trim().parse().ok()?;
 
     match code {
-        7 => Some(OscEvent::CwdChange(rest.to_string())),
+        7 => {
+            // Defensively decode %2F (and %2f) back to / so URL-encoded paths
+            // from shells that escape slashes still parse correctly.
+            let decoded = rest.replace("%2F", "/").replace("%2f", "/");
+            Some(OscEvent::CwdChange(decoded))
+        }
         2 => Some(OscEvent::TitleChange(rest.to_string())),
         133 => {
             let mark = match rest.trim() {

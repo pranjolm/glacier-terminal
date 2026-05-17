@@ -62,10 +62,12 @@ export default function GhostText({ terminal, suggestion }: Props) {
       style={{
         position: 'absolute',
         pointerEvents: 'none',
-        opacity: 0.4,
-        color: 'var(--gl-fg)',
+        opacity: 0.7,
+        color: 'var(--gl-ui-accent)',
         whiteSpace: 'pre',
         zIndex: 10,
+        background: 'var(--gl-ui-accent)11',
+        borderRadius: 2,
       }}
     >
       {suggestion}

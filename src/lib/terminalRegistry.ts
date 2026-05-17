@@ -209,8 +209,12 @@ export function updateEntryTheme(sessionId: string, settings: AppSettings) {
     xtermTheme.background = 'transparent';
   }
   entry.terminal.options.theme = xtermTheme;
-  entry.terminal.options.cursorStyle = settings.cursorStyle;
-  entry.terminal.options.cursorBlink = settings.cursorBlink;
+  if (entry.terminal.options.cursorStyle !== settings.cursorStyle) {
+    entry.terminal.options.cursorStyle = settings.cursorStyle;
+  }
+  if (entry.terminal.options.cursorBlink !== settings.cursorBlink) {
+    entry.terminal.options.cursorBlink = settings.cursorBlink;
+  }
   clearViewportBackground(entry);
   if (settings.backgroundImage) {
     entry.container.classList.add('xterm-glacier-bg');

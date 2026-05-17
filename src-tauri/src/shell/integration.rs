@@ -247,7 +247,7 @@ end
 
 # Report working directory on each prompt
 function __glacier_cwd --on-event fish_prompt
-    printf '\033]7;file://%s%s\033\\' (hostname) (pwd | string escape --style=url)
+    printf '\033]7;file://%s%s\033\\' (hostname) (string replace -a ' ' '%20' (pwd))
 end
 
 # Prompt marks for semantic terminal support

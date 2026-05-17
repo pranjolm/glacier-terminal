@@ -5,6 +5,8 @@ export interface GlacierTheme {
   foreground: string;
   cursor: string;
   selectionBackground: string;
+  selectionForeground: string;
+  selectionInactiveBackground: string;
   black: string;
   red: string;
   green: string;
@@ -36,7 +38,9 @@ export const THEMES: Record<string, GlacierTheme> = {
     background: '#1a1b26',
     foreground: '#c0caf5',
     cursor: '#c0caf5',
-    selectionBackground: '#283457',
+    selectionBackground: '#9ece6a',
+    selectionForeground: '#1a1b26',
+    selectionInactiveBackground: '#3d59a1',
     black: '#15161e',
     red: '#f7768e',
     green: '#9ece6a',
@@ -65,7 +69,9 @@ export const THEMES: Record<string, GlacierTheme> = {
     background: '#1e1e2e',
     foreground: '#cdd6f4',
     cursor: '#f5e0dc',
-    selectionBackground: '#313244',
+    selectionBackground: '#a6e3a1',
+    selectionForeground: '#1e1e2e',
+    selectionInactiveBackground: '#585b70',
     black: '#45475a',
     red: '#f38ba8',
     green: '#a6e3a1',
@@ -94,7 +100,9 @@ export const THEMES: Record<string, GlacierTheme> = {
     background: '#282828',
     foreground: '#ebdbb2',
     cursor: '#ebdbb2',
-    selectionBackground: '#3c3836',
+    selectionBackground: '#b8bb26',
+    selectionForeground: '#282828',
+    selectionInactiveBackground: '#665c54',
     black: '#282828',
     red: '#cc241d',
     green: '#98971a',
@@ -123,7 +131,9 @@ export const THEMES: Record<string, GlacierTheme> = {
     background: '#282c34',
     foreground: '#abb2bf',
     cursor: '#528bff',
-    selectionBackground: '#3e4451',
+    selectionBackground: '#98c379',
+    selectionForeground: '#282c34',
+    selectionInactiveBackground: '#5c6370',
     black: '#282c34',
     red: '#e06c75',
     green: '#98c379',
@@ -165,6 +175,8 @@ export function getXtermTheme(theme: GlacierTheme) {
     foreground: theme.foreground,
     cursor: theme.cursor,
     selectionBackground: theme.selectionBackground,
+    selectionForeground: theme.selectionForeground,
+    selectionInactiveBackground: theme.selectionInactiveBackground,
     black: theme.black,
     red: theme.red,
     green: theme.green,

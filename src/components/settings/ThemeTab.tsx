@@ -8,17 +8,21 @@ export default function ThemeTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Label>Color Theme</Label>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {Object.values(THEMES).map((theme) => (
+        {Object.values(THEMES).map((theme) => {
+            const isActive = settings.theme === theme.name;
+            return (
           <button
             key={theme.name}
             onClick={() => update({ theme: theme.name })}
             style={{
               background: theme.background,
-              border: `2px solid ${settings.theme === theme.name ? 'var(--gl-ui-accent)' : 'transparent'}`,
+              border: `2px solid ${isActive ? 'var(--gl-ui-accent)' : 'transparent'}`,
+              borderLeft: `4px solid ${isActive ? 'var(--gl-ui-accent)' : 'transparent'}`,
               borderRadius: 6,
-              padding: 10,
+              padding: isActive ? '10px 10px 10px 6px' : '10px 10px 10px 10px',
               cursor: 'pointer',
               textAlign: 'left',
+              boxShadow: isActive ? '0 0 8px rgba(0,0,0,0.3)' : 'none',
             }}
           >
             <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
@@ -29,9 +33,18 @@ export default function ThemeTab() {
                 />
               ))}
             </div>
-            <span style={{ color: theme.foreground, fontSize: 11 }}>{theme.label}</span>
+            <span style={{ color: theme.foreground, fontSize: 11, fontWeight: isActive ? 700 : 400, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{
+                color: 'var(--gl-ui-accent)',
+                fontWeight: 700,
+                fontSize: 13,
+                visibility: isActive ? 'visible' : 'hidden',
+              }}>▸</span>
+              {theme.label}
+            </span>
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

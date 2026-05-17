@@ -78,7 +78,11 @@ export default function TerminalPane({
         if (e.metaKey && e.key === 'd') return false;
 
         if (e.key === 'Enter') {
-          clearSuggestion();
+          const sug = suggestionRef.current;
+          if (sug) {
+            writeRef.current?.(sug);
+            clearSuggestion();
+          }
           return true;
         }
 

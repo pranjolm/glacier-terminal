@@ -62,8 +62,25 @@ const TerminalView = forwardRef<TerminalViewHandle, Props>(
       });
       ro.observe(mount);
 
+      const handleVisibilityChange = () => {
+        if (!document.hidden) {
+          entry.fitAddon.fit();
+          entry.terminal.refresh(0, entry.terminal.rows - 1);
+          entry.terminal.focus();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      const handleFocus = () => {
+        entry.fitAddon.fit();
+        entry.terminal.refresh(0, entry.terminal.rows - 1);
+      };
+      window.addEventListener('focus', handleFocus);
+
       return () => {
         ro.disconnect();
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleFocus);
         // Detach container from DOM — terminal instance stays alive in registry
         if (entry.container.parentNode === mount) {
           mount.removeChild(entry.container);

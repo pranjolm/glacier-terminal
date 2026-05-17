@@ -89,24 +89,38 @@ export default function SettingsPanel({ open, onClose }: Props) {
             padding: '0 8px',
           }}
         >
-          {(['theme', 'font', 'background'] as TabId[]).map((id) => (
+          {(['theme', 'font', 'background'] as TabId[]).map((id) => {
+            const isActive = activeTab === id;
+            return (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
               style={{
-                background: 'none',
+                background: isActive ? 'var(--gl-ui-accent)33' : 'none',
                 border: 'none',
-                borderBottom: `2px solid ${activeTab === id ? 'var(--gl-ui-accent)' : 'transparent'}`,
-                color: activeTab === id ? 'var(--gl-ui-text)' : 'var(--gl-ui-text-muted)',
+                borderLeft: `3px solid ${isActive ? 'var(--gl-ui-accent)' : 'transparent'}`,
+                borderBottom: `2px solid ${isActive ? 'var(--gl-ui-accent)' : 'transparent'}`,
+                color: isActive ? 'var(--gl-ui-text)' : 'var(--gl-ui-text-muted)',
                 cursor: 'pointer',
-                padding: '8px 12px',
+                padding: '8px 10px 8px 8px',
                 fontSize: 12,
+                fontWeight: isActive ? 600 : 400,
                 textTransform: 'capitalize',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
               }}
             >
+              <span style={{
+                color: 'var(--gl-ui-accent)',
+                fontWeight: 700,
+                fontSize: 14,
+                visibility: isActive ? 'visible' : 'hidden',
+              }}>▸</span>
               {id}
             </button>
-          ))}
+            );
+          })}
         </div>
 
         {/* Content */}
